@@ -1,0 +1,22 @@
+2026-04-24 22:08:12,832 - INFO - [Agent] HierarchicalGUIAgent initialized.
+2026-04-24 22:08:12,832 - WARNING - 
+2026-04-24 22:08:12,832 - WARNING - ============================================================
+2026-04-24 22:08:12,832 - WARNING - [调试模式] 当前 API 配置仅供自测使用
+2026-04-24 22:08:12,832 - WARNING -   API_URL:  https://ark.cn-beijing.volces.com/api/v3
+2026-04-24 22:08:12,832 - WARNING -   MODEL_ID: doubao-seed-1-6-vision-250815
+2026-04-24 22:08:12,832 - WARNING - 
+2026-04-24 22:08:12,832 - WARNING - 提示：提交时将使用主办方统一配置
+2026-04-24 22:08:12,832 - WARNING - ============================================================
+2026-04-24 22:08:12,832 - WARNING - 
+2026-04-24 22:08:12,832 - ERROR - Data directory ./test_data/offline does not exist. Please create it and add test cases.
+2026-04-24 22:15:35,781 - INFO - [Agent] HierarchicalGUIAgent initialized.
+2026-04-24 22:15:35,781 - WARNING - 
+2026-04-24 22:15:35,781 - WARNING - ============================================================
+2026-04-24 22:15:35,781 - WARNING - [调试模式] 当前 API 配置仅供自测使用
+2026-04-24 22:15:35,781 - WARNING -   API_URL:  https://ark.cn-beijing.volces.com/api/v3
+2026-04-24 22:15:35,781 - WARNING -   MODEL_ID: doubao-seed-1-6-vision-250815
+2026-04-24 22:15:35,781 - WARNING - 
+2026-04-24 22:15:35,781 - WARNING - 提示：提交时将使用主办方统一配置
+2026-04-24 22:15:35,781 - WARNING - ============================================================
+2026-04-24 22:15:35,782 - WARNING - 
+2026-04-24 22:15:35,782 - ERROR - Data directory ./test_data/offline does not exist. Please create it and add test cases.
