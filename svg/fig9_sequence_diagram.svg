@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="Noto Sans CJK SC, Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+    <marker id="ar9b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2E5C8A"/>
+    </marker>
+  </defs>
+
+  <text x="500" y="28" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a1a">完整算法执行时序图</text>
+  <text x="500" y="48" font-size="11" text-anchor="middle" fill="#555">End-to-End Execution Sequence Diagram (UML-style)</text>
+
+  <!-- Lifelines headers -->
+  <rect x="40" y="80" width="140" height="36" rx="4" fill="#FFF7E6" stroke="#D49A2E" stroke-width="1.4"/>
+  <text x="110" y="103" font-size="11" font-weight="bold" text-anchor="middle" fill="#7A5300">TestRunner</text>
+
+  <rect x="220" y="80" width="140" height="36" rx="4" fill="#E8F1FA" stroke="#2E5C8A" stroke-width="1.4"/>
+  <text x="290" y="103" font-size="11" font-weight="bold" text-anchor="middle" fill="#1f3a5f">Agent</text>
+
+  <rect x="400" y="80" width="140" height="36" rx="4" fill="#F3EBF8" stroke="#6F42C1" stroke-width="1.4"/>
+  <text x="470" y="103" font-size="11" font-weight="bold" text-anchor="middle" fill="#3F2466">TaskPlanner</text>
+
+  <rect x="580" y="80" width="140" height="36" rx="4" fill="#EDF7EE" stroke="#3D8B40" stroke-width="1.4"/>
+  <text x="650" y="103" font-size="11" font-weight="bold" text-anchor="middle" fill="#1F5223">ContextManager</text>
+
+  <rect x="760" y="80" width="140" height="36" rx="4" fill="#FBE9E7" stroke="#C0392B" stroke-width="1.4"/>
+  <text x="830" y="103" font-size="11" font-weight="bold" text-anchor="middle" fill="#7A1F1F">VLM</text>
+
+  <!-- Lifelines vertical -->
+  <line x1="110" y1="116" x2="110" y2="690" stroke="#D49A2E" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="290" y1="116" x2="290" y2="690" stroke="#2E5C8A" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="470" y1="116" x2="470" y2="690" stroke="#6F42C1" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="650" y1="116" x2="650" y2="690" stroke="#3D8B40" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="830" y1="116" x2="830" y2="690" stroke="#C0392B" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Step 1 region -->
+  <rect x="20" y="130" width="970" height="280" rx="4" fill="none" stroke="#999" stroke-width="0.6" stroke-dasharray="2,2"/>
+  <text x="34" y="148" font-size="11" font-weight="bold" fill="#444">═══ Step 1 (首步: 含规划) ═══</text>
+
+  <!-- reset -->
+  <line x1="110" y1="160" x2="288" y2="160" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="200" y="155" font-size="10" text-anchor="middle" fill="#444">reset(instruction)</text>
+
+  <!-- act(step=1) -->
+  <line x1="110" y1="180" x2="288" y2="180" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="200" y="175" font-size="10" text-anchor="middle" fill="#444">act(input, step=1)</text>
+
+  <!-- Agent activations -->
+  <rect x="284" y="180" width="12" height="220" fill="#E8F1FA" stroke="#2E5C8A" stroke-width="0.6"/>
+
+  <!-- preprocess (self) -->
+  <line x1="296" y1="200" x2="346" y2="200" stroke="#333" stroke-width="1.4"/>
+  <line x1="346" y1="200" x2="346" y2="216" stroke="#333" stroke-width="1.4"/>
+  <line x1="346" y1="216" x2="296" y2="216" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="378" y="208" font-size="10" fill="#444">preprocess(𝑆₁)</text>
+
+  <!-- detect_app -->
+  <line x1="296" y1="234" x2="468" y2="234" stroke="#2E5C8A" stroke-width="1.4" marker-end="url(#ar9b)"/>
+  <text x="380" y="229" font-size="10" text-anchor="middle" fill="#1f3a5f">detect_app(𝐼)</text>
+  <line x1="468" y1="248" x2="296" y2="248" stroke="#2E5C8A" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="380" y="262" font-size="9" text-anchor="middle" fill="#666" font-style="italic">↳ "美团"</text>
+
+  <!-- generate_plan -->
+  <rect x="464" y="280" width="12" height="80" fill="#F3EBF8" stroke="#6F42C1" stroke-width="0.6"/>
+  <line x1="296" y1="284" x2="464" y2="284" stroke="#2E5C8A" stroke-width="1.4" marker-end="url(#ar9b)"/>
+  <text x="380" y="279" font-size="10" text-anchor="middle" fill="#1f3a5f">generate_plan(𝐼, 𝑆₁)</text>
+
+  <!-- TaskPlanner -> VLM -->
+  <line x1="476" y1="304" x2="828" y2="304" stroke="#6F42C1" stroke-width="1.4" marker-end="url(#ar9b)"/>
+  <text x="650" y="299" font-size="10" text-anchor="middle" fill="#3F2466">_call_api(plan_prompt)</text>
+  <rect x="826" y="304" width="8" height="40" fill="#FBE9E7" stroke="#C0392B" stroke-width="0.6"/>
+  <line x1="826" y1="340" x2="476" y2="340" stroke="#6F42C1" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ar9b)"/>
+  <text x="650" y="335" font-size="9" text-anchor="middle" fill="#666" font-style="italic">↳ 计划文本 𝑃</text>
+
+  <line x1="464" y1="356" x2="296" y2="356" stroke="#6F42C1" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ar9b)"/>
+  <text x="380" y="370" font-size="9" text-anchor="middle" fill="#3F2466" font-style="italic">↳ self.plan ← 𝑃</text>
+
+  <!-- build_messages and api_call (step1) -->
+  <line x1="296" y1="380" x2="828" y2="380" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="650" y="375" font-size="10" text-anchor="middle" fill="#444">_call_api(messages, T=0.0)</text>
+  <rect x="826" y="380" width="8" height="20" fill="#FBE9E7" stroke="#C0392B" stroke-width="0.6"/>
+  <line x1="826" y1="396" x2="296" y2="396" stroke="#333" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ar9)"/>
+  <text x="650" y="392" font-size="9" text-anchor="middle" fill="#666" font-style="italic">↳ raw_output</text>
+
+  <!-- Step t region -->
+  <rect x="20" y="420" width="970" height="240" rx="4" fill="none" stroke="#999" stroke-width="0.6" stroke-dasharray="2,2"/>
+  <text x="34" y="438" font-size="11" font-weight="bold" fill="#444">═══ Step t (后续步骤: 复用 𝑃) ═══</text>
+
+  <line x1="110" y1="458" x2="288" y2="458" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="200" y="453" font-size="10" text-anchor="middle" fill="#444">act(input, step=t)</text>
+
+  <rect x="284" y="458" width="12" height="180" fill="#E8F1FA" stroke="#2E5C8A" stroke-width="0.6"/>
+
+  <!-- get history -->
+  <rect x="644" y="476" width="12" height="32" fill="#EDF7EE" stroke="#3D8B40" stroke-width="0.6"/>
+  <line x1="296" y1="478" x2="644" y2="478" stroke="#2E5C8A" stroke-width="1.4" marker-end="url(#ar9b)"/>
+  <text x="470" y="473" font-size="10" text-anchor="middle" fill="#1f3a5f">parse_runner_history(𝐻ₜ₋₁)</text>
+  <line x1="644" y1="504" x2="296" y2="504" stroke="#3D8B40" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ar9b)"/>
+  <text x="470" y="498" font-size="9" text-anchor="middle" fill="#666" font-style="italic">↳ (摘要文字, 近期图像)</text>
+
+  <!-- build prompt with plan -->
+  <line x1="296" y1="528" x2="346" y2="528" stroke="#333" stroke-width="1.4"/>
+  <line x1="346" y1="528" x2="346" y2="544" stroke="#333" stroke-width="1.4"/>
+  <line x1="346" y1="544" x2="296" y2="544" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="378" y="536" font-size="10" fill="#444">build_messages(𝑃, history, 𝑆ₜ)</text>
+
+  <!-- API call -->
+  <line x1="296" y1="560" x2="828" y2="560" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="650" y="555" font-size="10" text-anchor="middle" fill="#444">_call_api(messages, T=0.0)</text>
+  <rect x="826" y="560" width="8" height="20" fill="#FBE9E7" stroke="#C0392B" stroke-width="0.6"/>
+  <line x1="826" y1="576" x2="296" y2="576" stroke="#333" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ar9)"/>
+
+  <!-- parse + validate -->
+  <line x1="296" y1="596" x2="346" y2="596" stroke="#333" stroke-width="1.4"/>
+  <line x1="346" y1="596" x2="346" y2="612" stroke="#333" stroke-width="1.4"/>
+  <line x1="346" y1="612" x2="296" y2="612" stroke="#333" stroke-width="1.4" marker-end="url(#ar9)"/>
+  <text x="378" y="604" font-size="10" fill="#444">parse() + validate()</text>
+
+  <!-- update context -->
+  <line x1="296" y1="628" x2="644" y2="628" stroke="#2E5C8A" stroke-width="1.4" marker-end="url(#ar9b)"/>
+  <text x="470" y="623" font-size="10" text-anchor="middle" fill="#1f3a5f">add_step(t, action, params, 𝑆ₜ)</text>
+
+  <!-- Return to runner -->
+  <line x1="288" y1="650" x2="112" y2="650" stroke="#2E5C8A" stroke-width="1.4" stroke-dasharray="3,2" marker-end="url(#ar9b)"/>
+  <text x="200" y="664" font-size="10" text-anchor="middle" fill="#1f3a5f" font-style="italic">↳ AgentOutput(action, params)</text>
+
+  <!-- Loop label -->
+  <rect x="38" y="676" width="130" height="22" rx="3" fill="#FFF3DE" stroke="#D49A2E"/>
+  <text x="103" y="691" font-size="10" text-anchor="middle" fill="#7A5300" font-weight="bold">loop until COMPLETE</text>
+
+  <text x="500" y="708" font-size="10" text-anchor="middle" fill="#666" font-style="italic">图 9 · 端到端时序交互 — 首步规划成本一次性，后续每步仅做轻量推理</text>
+</svg>

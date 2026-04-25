@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760" font-family="Noto Sans CJK SC, Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="arrow1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2E5C8A"/>
+    </marker>
+    <linearGradient id="hdrGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#3B6FA8"/>
+      <stop offset="100%" stop-color="#2E5C8A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text x="500" y="28" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a1a">HierarchicalGUIAgent 总体架构</text>
+  <text x="500" y="48" font-size="11" text-anchor="middle" fill="#555">Hierarchical Plan-and-Execute Architecture for Mobile GUI Agents</text>
+
+  <!-- Input layer -->
+  <rect x="60" y="78" width="880" height="56" rx="6" fill="#FFF7E6" stroke="#D49A2E" stroke-width="1.4"/>
+  <text x="100" y="100" font-size="12" font-weight="bold" fill="#7A5300">输入层 Input</text>
+  <rect x="180" y="90" width="160" height="34" rx="4" fill="#FFFFFF" stroke="#D49A2E"/>
+  <text x="260" y="111" font-size="11" text-anchor="middle" fill="#333">用户指令 𝐼</text>
+  <rect x="360" y="90" width="180" height="34" rx="4" fill="#FFFFFF" stroke="#D49A2E"/>
+  <text x="450" y="111" font-size="11" text-anchor="middle" fill="#333">当前截图 𝑆ₜ</text>
+  <rect x="560" y="90" width="200" height="34" rx="4" fill="#FFFFFF" stroke="#D49A2E"/>
+  <text x="660" y="111" font-size="11" text-anchor="middle" fill="#333">历史动作序列 𝐻ₜ₋₁</text>
+
+  <!-- Layer 1: Planning Module -->
+  <rect x="60" y="158" width="880" height="100" rx="6" fill="#E8F1FA" stroke="#2E5C8A" stroke-width="1.6"/>
+  <rect x="60" y="158" width="880" height="22" rx="6" fill="url(#hdrGrad)"/>
+  <text x="500" y="174" font-size="12" font-weight="bold" text-anchor="middle" fill="#FFF">Layer 1 · 战略规划层 (Strategic Planning Layer) — 仅首步执行</text>
+  <rect x="120" y="194" width="220" height="50" rx="4" fill="#FFFFFF" stroke="#2E5C8A"/>
+  <text x="230" y="215" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">App 识别子模块</text>
+  <text x="230" y="232" font-size="10" text-anchor="middle" fill="#555">detect_app(𝐼)</text>
+  <rect x="380" y="194" width="240" height="50" rx="4" fill="#FFFFFF" stroke="#2E5C8A"/>
+  <text x="500" y="215" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">TaskPlanner 任务规划器</text>
+  <text x="500" y="232" font-size="10" text-anchor="middle" fill="#555">𝑃 = VLM_planner(𝐼, 𝑆₁)</text>
+  <rect x="660" y="194" width="220" height="50" rx="4" fill="#FFFFFF" stroke="#2E5C8A"/>
+  <text x="770" y="215" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">FewShotDB 样例库</text>
+  <text x="770" y="232" font-size="10" text-anchor="middle" fill="#555">9 类 App 专属示例</text>
+
+  <!-- Layer 2: Perception & Context -->
+  <rect x="60" y="282" width="880" height="100" rx="6" fill="#EDF7EE" stroke="#3D8B40" stroke-width="1.6"/>
+  <rect x="60" y="282" width="880" height="22" rx="6" fill="#3D8B40"/>
+  <text x="500" y="298" font-size="12" font-weight="bold" text-anchor="middle" fill="#FFF">Layer 2 · 感知与上下文层 (Perception &amp; Context Layer)</text>
+  <rect x="120" y="318" width="320" height="50" rx="4" fill="#FFFFFF" stroke="#3D8B40"/>
+  <text x="280" y="338" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">ImagePreprocessor</text>
+  <text x="280" y="356" font-size="10" text-anchor="middle" fill="#555">LANCZOS 降采样 (max_w=720) + RGB 归一化</text>
+  <rect x="560" y="318" width="320" height="50" rx="4" fill="#FFFFFF" stroke="#3D8B40"/>
+  <text x="720" y="338" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">ContextManager</text>
+  <text x="720" y="356" font-size="10" text-anchor="middle" fill="#555">Token 感知滑窗压缩 (𝑁_win=3)</text>
+
+  <!-- Layer 3: Decision -->
+  <rect x="60" y="406" width="880" height="100" rx="6" fill="#F3EBF8" stroke="#6F42C1" stroke-width="1.6"/>
+  <rect x="60" y="406" width="880" height="22" rx="6" fill="#6F42C1"/>
+  <text x="500" y="422" font-size="12" font-weight="bold" text-anchor="middle" fill="#FFF">Layer 3 · 决策推理层 (Decision &amp; Reasoning Layer)</text>
+  <rect x="120" y="442" width="320" height="50" rx="4" fill="#FFFFFF" stroke="#6F42C1"/>
+  <text x="280" y="462" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">PromptEngine</text>
+  <text x="280" y="480" font-size="10" text-anchor="middle" fill="#555">SYSTEM (固定/KV-Cache) + USER (动态)</text>
+  <rect x="560" y="442" width="320" height="50" rx="4" fill="#FFFFFF" stroke="#6F42C1"/>
+  <text x="720" y="462" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">VLM 推理引擎</text>
+  <text x="720" y="480" font-size="10" text-anchor="middle" fill="#555">doubao-seed-1-6-vision-250815</text>
+
+  <!-- Layer 4: Output -->
+  <rect x="60" y="530" width="880" height="100" rx="6" fill="#FBE9E7" stroke="#C0392B" stroke-width="1.6"/>
+  <rect x="60" y="530" width="880" height="22" rx="6" fill="#C0392B"/>
+  <text x="500" y="546" font-size="12" font-weight="bold" text-anchor="middle" fill="#FFF">Layer 4 · 输出与鲁棒控制层 (Output &amp; Robust Control Layer)</text>
+  <rect x="120" y="566" width="320" height="50" rx="4" fill="#FFFFFF" stroke="#C0392B"/>
+  <text x="280" y="586" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">RobustOutputParser</text>
+  <text x="280" y="604" font-size="10" text-anchor="middle" fill="#555">六级级联解析 (L1→L6)</text>
+  <rect x="560" y="566" width="320" height="50" rx="4" fill="#FFFFFF" stroke="#C0392B"/>
+  <text x="720" y="586" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">AdaptiveRetry 自适应重试</text>
+  <text x="720" y="604" font-size="10" text-anchor="middle" fill="#555">温度渐升 𝑇₀=0.0 → 𝑇₁=0.3</text>
+
+  <!-- Output -->
+  <rect x="60" y="654" width="880" height="56" rx="6" fill="#FFF7E6" stroke="#D49A2E" stroke-width="1.4"/>
+  <text x="100" y="676" font-size="12" font-weight="bold" fill="#7A5300">输出层 Output</text>
+  <rect x="240" y="666" width="520" height="34" rx="4" fill="#FFFFFF" stroke="#D49A2E"/>
+  <text x="500" y="687" font-size="11" text-anchor="middle" fill="#333">AgentOutput = (action ∈ {CLICK,TYPE,SCROLL,OPEN,COMPLETE}, parameters θ)</text>
+
+  <!-- Vertical arrows -->
+  <line x1="500" y1="134" x2="500" y2="156" stroke="#333" stroke-width="1.5" marker-end="url(#arrow1)"/>
+  <line x1="500" y1="258" x2="500" y2="280" stroke="#333" stroke-width="1.5" marker-end="url(#arrow1)"/>
+  <line x1="500" y1="382" x2="500" y2="404" stroke="#333" stroke-width="1.5" marker-end="url(#arrow1)"/>
+  <line x1="500" y1="506" x2="500" y2="528" stroke="#333" stroke-width="1.5" marker-end="url(#arrow1)"/>
+  <line x1="500" y1="630" x2="500" y2="652" stroke="#333" stroke-width="1.5" marker-end="url(#arrow1)"/>
+
+  <!-- Footer label -->
+  <text x="500" y="738" font-size="10" text-anchor="middle" fill="#666" font-style="italic">图 1 · 移动端 GUI Agent 四层架构总体设计</text>
+</svg>

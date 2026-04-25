@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 540" font-family="Noto Sans CJK SC, Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2E5C8A"/>
+    </marker>
+    <marker id="ar8r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#C0392B"/>
+    </marker>
+    <marker id="ar8g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3D8B40"/>
+    </marker>
+  </defs>
+
+  <text x="500" y="28" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a1a1a">自适应温度重试机制</text>
+  <text x="500" y="48" font-size="11" text-anchor="middle" fill="#555">Adaptive Temperature Retry — Error-Aware Re-prompting Strategy</text>
+
+  <!-- Start -->
+  <ellipse cx="500" cy="92" rx="60" ry="22" fill="#E8F1FA" stroke="#2E5C8A" stroke-width="1.4"/>
+  <text x="500" y="96" font-size="11" font-weight="bold" text-anchor="middle" fill="#1f3a5f">act() 入口</text>
+
+  <line x1="500" y1="114" x2="500" y2="134" stroke="#2E5C8A" stroke-width="1.5" marker-end="url(#ar8)"/>
+
+  <!-- attempt = 0 init -->
+  <rect x="380" y="134" width="240" height="44" rx="4" fill="#F8F9FA" stroke="#888" stroke-width="1.4"/>
+  <text x="500" y="154" font-size="11" font-weight="bold" text-anchor="middle" fill="#333">attempt ← 0,  retry_hint ← None</text>
+  <text x="500" y="170" font-size="9" text-anchor="middle" fill="#666">MAX_RETRIES = 2, T = [0.0, 0.3]</text>
+
+  <line x1="500" y1="178" x2="500" y2="198" stroke="#2E5C8A" stroke-width="1.5" marker-end="url(#ar8)"/>
+
+  <!-- Build prompt -->
+  <rect x="350" y="198" width="300" height="44" rx="4" fill="#F3EBF8" stroke="#6F42C1" stroke-width="1.4"/>
+  <text x="500" y="218" font-size="11" font-weight="bold" text-anchor="middle" fill="#3F2466">PromptEngine.build(... + retry_hint)</text>
+  <text x="500" y="234" font-size="9" text-anchor="middle" fill="#555">附加错误提示 (仅 attempt &gt; 0 时)</text>
+
+  <line x1="500" y1="242" x2="500" y2="262" stroke="#2E5C8A" stroke-width="1.5" marker-end="url(#ar8)"/>
+
+  <!-- API call -->
+  <rect x="350" y="262" width="300" height="44" rx="4" fill="#FFF7E6" stroke="#D49A2E" stroke-width="1.4"/>
+  <text x="500" y="282" font-size="11" font-weight="bold" text-anchor="middle" fill="#7A5300">_call_api(messages, temperature=T[attempt])</text>
+  <text x="500" y="298" font-size="9" text-anchor="middle" fill="#555">VLM 推理</text>
+
+  <line x1="500" y1="306" x2="500" y2="326" stroke="#2E5C8A" stroke-width="1.5" marker-end="url(#ar8)"/>
+
+  <!-- Parse + Validate -->
+  <rect x="350" y="326" width="300" height="44" rx="4" fill="#FBE9E7" stroke="#C0392B" stroke-width="1.4"/>
+  <text x="500" y="346" font-size="11" font-weight="bold" text-anchor="middle" fill="#7A1F1F">parse() → validate() → (is_valid, error)</text>
+  <text x="500" y="362" font-size="9" text-anchor="middle" fill="#555">六级解析 + 参数合法性校验</text>
+
+  <line x1="500" y1="370" x2="500" y2="390" stroke="#2E5C8A" stroke-width="1.5" marker-end="url(#ar8)"/>
+
+  <!-- Decision diamond -->
+  <polygon points="500,390 580,440 500,490 420,440" fill="#FFF3DE" stroke="#D49A2E" stroke-width="1.4"/>
+  <text x="500" y="436" font-size="11" font-weight="bold" text-anchor="middle" fill="#7A5300">is_valid?</text>
+
+  <!-- YES branch -->
+  <line x1="580" y1="440" x2="730" y2="440" stroke="#3D8B40" stroke-width="1.6" marker-end="url(#ar8g)"/>
+  <text x="650" y="432" font-size="10" fill="#1F5223" font-weight="bold">是 (yes)</text>
+
+  <ellipse cx="800" cy="440" rx="80" ry="22" fill="#D6F0DC" stroke="#3D8B40" stroke-width="1.6"/>
+  <text x="800" y="438" font-size="11" font-weight="bold" text-anchor="middle" fill="#1F5223">return</text>
+  <text x="800" y="452" font-size="9" text-anchor="middle" fill="#1F5223">(action, params)</text>
+
+  <!-- NO branch -->
+  <line x1="420" y1="440" x2="280" y2="440" stroke="#C0392B" stroke-width="1.6" marker-end="url(#ar8r)"/>
+  <text x="350" y="432" font-size="10" fill="#7A1F1F" font-weight="bold">否 (no)</text>
+
+  <!-- attempt++ check -->
+  <rect x="100" y="416" width="180" height="48" rx="4" fill="#FBE9E7" stroke="#C0392B" stroke-width="1.4"/>
+  <text x="190" y="436" font-size="11" font-weight="bold" text-anchor="middle" fill="#7A1F1F">attempt += 1</text>
+  <text x="190" y="452" font-size="9" text-anchor="middle" fill="#555">retry_hint ← build_hint(error)</text>
+
+  <line x1="190" y1="416" x2="190" y2="216" stroke="#C0392B" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ar8r)"/>
+  <line x1="190" y1="216" x2="350" y2="216" stroke="#C0392B" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <text x="120" y="320" font-size="10" fill="#7A1F1F" font-weight="bold" transform="rotate(-90 120 320)">attempt &lt; MAX_RETRIES</text>
+
+  <!-- Final fallback if exhausted -->
+  <line x1="190" y1="464" x2="190" y2="500" stroke="#C0392B" stroke-width="1.4"/>
+  <line x1="190" y1="500" x2="800" y2="500" stroke="#C0392B" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <line x1="800" y1="500" x2="800" y2="464" stroke="#C0392B" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ar8r)"/>
+  <text x="500" y="494" font-size="10" text-anchor="middle" fill="#7A1F1F" font-weight="bold">if attempt ≥ MAX_RETRIES → 兜底返回 ('COMPLETE', {})</text>
+
+  <!-- Side panel: temperature schedule -->
+  <rect x="40" y="100" width="240" height="280" rx="6" fill="#F8FAFC" stroke="#2E5C8A" stroke-width="1.2"/>
+  <text x="160" y="124" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f3a5f">温度调度策略</text>
+  <line x1="60" y1="134" x2="260" y2="134" stroke="#B6CCE2"/>
+  
+  <text x="60" y="156" font-size="11" font-weight="bold" fill="#333">attempt = 0</text>
+  <text x="60" y="172" font-size="10" fill="#444" font-family="Noto Sans Mono CJK SC, Consolas, monospace">T = 0.0 (确定性)</text>
+  <text x="60" y="188" font-size="9" fill="#666">输出格式严格稳定</text>
+  <text x="60" y="200" font-size="9" fill="#666">命中 KV-Cache 概率高</text>
+
+  <line x1="60" y1="216" x2="260" y2="216" stroke="#DDD" stroke-dasharray="3,2"/>
+
+  <text x="60" y="238" font-size="11" font-weight="bold" fill="#7A5300">attempt = 1</text>
+  <text x="60" y="254" font-size="10" fill="#444" font-family="Noto Sans Mono CJK SC, Consolas, monospace">T = 0.3 (轻度采样)</text>
+  <text x="60" y="270" font-size="9" fill="#666">跳出局部输出模式</text>
+  <text x="60" y="282" font-size="9" fill="#666">+ 错误提示注入</text>
+
+  <line x1="60" y1="298" x2="260" y2="298" stroke="#DDD" stroke-dasharray="3,2"/>
+
+  <text x="160" y="320" font-size="11" font-weight="bold" text-anchor="middle" fill="#1f3a5f">数学形式</text>
+  <text x="160" y="340" font-size="10" font-family="Noto Sans Mono CJK SC, Consolas, monospace" text-anchor="middle" fill="#333">T_api^(k) = T₀ + k·ΔT</text>
+  <text x="160" y="356" font-size="9" text-anchor="middle" fill="#666">T₀ = 0.0,  ΔT = 0.3</text>
+  <text x="160" y="370" font-size="9" text-anchor="middle" fill="#666">k ∈ {0, 1, ..., K_max-1}</text>
+
+  <!-- Right side: error hint sample -->
+  <rect x="720" y="100" width="240" height="280" rx="6" fill="#FCEDED" stroke="#C0392B" stroke-width="1.2"/>
+  <text x="840" y="124" font-size="12" font-weight="bold" text-anchor="middle" fill="#7A1F1F">错误提示注入样例</text>
+  <line x1="740" y1="134" x2="940" y2="134" stroke="#F0BAB1"/>
+  
+  <text x="740" y="156" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#444">⚠️ 上次输出格式错误</text>
+  <text x="740" y="170" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#444">([具体错误类型]),</text>
+  <text x="740" y="184" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#444">请严格按格式输出:</text>
+
+  <text x="740" y="206" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#7A1F1F">动作：CLICK:[[x, y]]</text>
+  <text x="740" y="220" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#7A1F1F">动作：TYPE:['内容']</text>
+  <text x="740" y="234" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#7A1F1F">动作：SCROLL:[[x1,y1],</text>
+  <text x="740" y="248" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#7A1F1F">         [x2,y2]]</text>
+  <text x="740" y="262" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#7A1F1F">动作：OPEN:['App名']</text>
+  <text x="740" y="276" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#7A1F1F">动作：COMPLETE:[]</text>
+
+  <text x="740" y="304" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#444">「动作：」必须单独一行,</text>
+  <text x="740" y="318" font-size="9" font-family="Noto Sans Mono CJK SC, Consolas, monospace" fill="#444">格式完全一致.</text>
+
+  <text x="840" y="350" font-size="9" text-anchor="middle" fill="#7A1F1F" font-style="italic">基于实际错误类型动态生成</text>
+  <text x="840" y="364" font-size="9" text-anchor="middle" fill="#7A1F1F" font-style="italic">为模型提供针对性的修正信号</text>
+
+  <text x="500" y="528" font-size="10" text-anchor="middle" fill="#666" font-style="italic">图 8 · 自适应温度重试机制 — 在确定性与多样性之间动态切换，保证单步成功率</text>
+</svg>
