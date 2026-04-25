@@ -1,70 +1,125 @@
 """
-提示词工程模块（Prompt Engineering）
+提示词工程模块 v4.0（Prompt Engineering）
 
-核心设计思路：
-1. System Prompt 固定化，充分利用 KV Cache 降低 Token 开销
-2. 动态 User Prompt 携带任务进度、历史摘要、少样本示例
-3. 针对不同 App 类型注入专属 Few-Shot 示例，提升领域适配性
-4. Chain-of-Thought 结构引导模型输出高质量推理过程
+v4.0 核心改进：
+1. detect_app_from_instruction()：从指令文本解析精确 App 名（覆盖乱码问题）
+2. step1 OPEN 强制提示：当 instruction_app 已知时，第一步明确指出需要 OPEN
+3. CLICK 坐标经验规则细化（修复 y 偏高问题）
+4. 精简 Few-Shot，保证 Token 效率
 """
 
-import logging
 import re
+import logging
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
+
 # ============================================================
-#   系统级提示词（固定，可被 KV Cache）
+#   从指令中提取 App 名（关键新增功能）
 # ============================================================
 
-SYSTEM_PROMPT = """你是一个专业的安卓手机 GUI 操作 Agent，负责根据用户指令和当前截图，输出精确的下一步操作。
+# 已知 App 名称列表（中文全名 + 常见别名）
+# 注意：别名必须把较长的字符串排在前面，防止前缀截断
+KNOWN_APPS = {
+    "美团": ["美团外卖", "美团", "外卖"],
+    "百度地图": ["百度地图", "百度导航"],
+    "哔哩哔哩": ["哔哩哔哩", "B站", "bilibili", "哔哩"],
+    "抖音": ["抖音", "douyin"],
+    "快手": ["快手", "kuaishou"],
+    "爱奇艺": ["爱奇艺", "iqiyi", "奇艺"],
+    "芒果TV": ["芒果TV", "芒果tv", "芒果", "MangoTV"],
+    "腾讯视频": ["腾讯视频", "腾讯"],
+    "喜马拉雅": ["喜马拉雅", "喜马"],
+    "去哪儿": ["去哪儿旅行", "去哪儿", "qunar"],
+}
+
+
+def detect_app_from_instruction(instruction: str) -> Optional[str]:
+    """
+    从用户指令文本中提取目标 App 名称
+
+    优先级：精确匹配已知App名 > 正则提取
+
+    Args:
+        instruction: 用户任务指令字符串
+
+    Returns:
+        App名称字符串，如 "美团"、"百度地图"，未识别则返回 None
+    """
+    if not instruction:
+        return None
+
+    # 优先精确匹配已知 App
+    for canonical, aliases in KNOWN_APPS.items():
+        for alias in aliases:
+            if alias in instruction:
+                logger.info(f"[AppDetect] Matched '{alias}' → '{canonical}'")
+                return canonical
+
+    # 正则提取：通常格式是"去XXX"、"打开XXX"、"在XXX上"
+    patterns = [
+        r"去([^\s，。、！？去打开找]{2,6}(?:TV|tv|Map)?)[上里中\s，。]",
+        r"打开([^\s，。、！？]{2,8}(?:TV|tv)?)",
+        r"在([^\s，。、！？]{2,8}(?:TV|tv)?)(?:上|里|中|App|应用)",
+    ]
+    for pat in patterns:
+        m = re.search(pat, instruction)
+        if m:
+            name = m.group(1).strip()
+            logger.info(f"[AppDetect] Regex extracted: '{name}'")
+            return name
+
+    return None
+
+
+# ============================================================
+#   系统提示词
+# ============================================================
+
+SYSTEM_PROMPT = """你是一个专业的安卓手机 GUI 操作 Agent。根据用户指令和当前截图，输出下一步的精确操作。
 
 ## 坐标系统
-- 所有坐标使用归一化坐标，范围 [0, 1000]
-- x=0 为屏幕最左，x=1000 为屏幕最右
-- y=0 为屏幕顶部，y=1000 为屏幕底部
-- 坐标必须落在目标 UI 元素的【内部中心】，不要点到边缘
+- 所有坐标归一化到 [0, 1000]，x=左→右，y=上→下
+- 坐标必须落在目标元素的**视觉中心**
 
-## 可用动作
-| 动作 | 输出格式 | 说明 |
-|------|----------|------|
-| CLICK | `CLICK:[[x, y]]` | 单点点击，x/y 为归一化坐标 |
-| TYPE | `TYPE:['文本内容']` | 在当前激活的输入框中键入文字 |
-| SCROLL | `SCROLL:[[x1, y1], [x2, y2]]` | 从起点滑动到终点 |
-| OPEN | `OPEN:['精确应用名']` | 打开指定 App，名称必须与手机上显示的一致 |
-| COMPLETE | `COMPLETE:[]` | 任务已全部完成时输出 |
-
-## ⚠️ 严格输出格式（必须遵守）
-每次回复必须包含两部分：
+## 动作格式（严格匹配）
 ```
-思考：[用中文分析当前界面状态，判断已完成的步骤，确定下一步目标]
-动作：ACTION:[[params]]
+动作：CLICK:[[x, y]]              ← 点击坐标
+动作：TYPE:['内容']               ← 在输入框输入文字
+动作：SCROLL:[[x1,y1],[x2,y2]]    ← 从起点滑动到终点
+动作：OPEN:['应用名']             ← 打开指定App
+动作：COMPLETE:[]                 ← 任务全部完成
 ```
 
-**格式错误示例（禁止）**：
-- ❌ 动作：click [[500, 300]]  （必须大写）
-- ❌ 动作：CLICK(500, 300)     （必须双层方括号格式）
-- ❌ 在"思考"中写"任务完成"   （这不会触发COMPLETE，必须在"动作"行写）
+## 必须遵守的输出格式
+```
+思考：[分析当前界面，确定下一步操作目标]
+动作：[上面某种格式]
+```
 
-**格式正确示例**：
-- ✅ 动作：CLICK:[[500, 300]]
-- ✅ 动作：TYPE:['搜索内容']
-- ✅ 动作：OPEN:['美团']
-- ✅ 动作：COMPLETE:[]
+## 坐标参考规则
+- **顶部状态栏/搜索框**：y 在 [60, 140] 之间，不要点到 y<60 的区域
+- **顶部右侧图标**（搜索、设置、更多）：x=[880,970], y=[70,120]
+- **顶部左侧图标**（返回、菜单）：x=[30,120], y=[70,120]
+- **搜索结果列表第1项**：y 约在 [140, 210] 之间（通常第一条结果在此区域，不要偏高）
+- **搜索结果列表第2项**：y 约在 [240, 310] 之间
+- **底部标签栏**：y 在 [880, 980] 之间
+- **底部结算/确认按钮**：y 在 [880, 960] 之间
 
-## 关键操作规则
-1. CLICK 坐标要精确落在目标元素中心（按钮、图标、文字区域内部）
-2. 顶部搜索框/导航栏通常在 y=[40, 150]；底部TabBar在 y=[900, 1000]
-3. 右上角图标（搜索、更多）通常在 x=[880, 980], y=[40, 100]
-4. COMPLETE 仅在界面明确显示"操作成功/订单提交成功/完成"时输出
-5. 若找不到目标元素，先 SCROLL:[[500, 700], [500, 300]] 向下滚动查找
-6. OPEN 的应用名必须是完整精确的中文名（如"美团"、"百度地图"），不要加"App"后缀
+## 关键规则
+1. 元素点击必须精确，y坐标不能偏高（不要点状态栏），要点元素**中心**
+2. OPEN 的 App 名必须与手机桌面图标一致（中文精确名称，不加"App"后缀）
+3. 搜索框点击后，下一步直接 TYPE 输入，不需要再次点击
+4. COMPLETE 只在界面显示"成功/已完成/订单提交"等明确完成状态时输出
+5. 找不到目标 → 先 SCROLL:[[500,700],[500,300]] 向下查找
+6. TYPE 直接输入内容，不加任何前缀
+
 """
 
 
 # ============================================================
-#   App 专属 Few-Shot 示例库
+#   User Prompt 构建
 # ============================================================
 
 # 每个条目: {"scenario": ..., "screenshot_desc": ..., "thought": ..., "action": ...}
@@ -295,65 +350,69 @@ def build_user_prompt(
     history_summary: str,
     recent_actions_text: str,
     app_name: str,
+    instruction_app: Optional[str] = None,
     retry_hint: str = "",
 ) -> str:
     """
     构建动态 User Prompt
 
-    Args:
-        instruction: 原始用户指令
-        step_count: 当前步骤编号
-        task_plan: 首步生成的任务规划文本（可为 None）
-        history_summary: 早期历史的文字摘要
-        recent_actions_text: 最近几步的动作记录
-        app_name: 当前 App 名称
-        retry_hint: 重试时附加的错误提示
-
-    Returns:
-        user prompt 字符串
+    instruction_app: 从指令中提取的精确 App 名，用于 step1 OPEN 提示
     """
     parts = []
 
-    # 任务目标
     parts.append(f"## 用户任务\n{instruction}\n")
 
-    # 任务规划（来自 TaskPlanner，首步生成）
+    # ★ 关键：step 1 时，若知道 App 名，强制提示第一步要 OPEN
+    if step_count == 1 and instruction_app:
+        parts.append(
+            f"## ⚠️ 第一步必须执行\n"
+            f"当前在手机桌面（或应用未打开）。任务需要的App是：**{instruction_app}**\n"
+            f"第一步动作必须是：\n"
+            f"```\n"
+            f"动作：OPEN:['{instruction_app}']\n"
+            f"```\n"
+        )
+    elif step_count == 1:
+        parts.append(
+            "## 提示\n"
+            "这是任务第一步。如果当前界面是手机桌面，请先用 OPEN:['应用名'] 打开目标应用。\n"
+        )
+
     if task_plan:
         parts.append(f"## 任务规划（参考）\n{task_plan}\n")
 
-    # 历史摘要
     if history_summary:
-        parts.append(f"## 早期操作摘要\n{history_summary}\n")
+        parts.append(f"## 历史摘要\n{history_summary}\n")
 
-    # 最近动作
     if recent_actions_text:
-        parts.append(f"## 最近执行的操作\n{recent_actions_text}\n")
+        parts.append(f"## 最近操作\n{recent_actions_text}\n")
 
-    # 当前步骤
     parts.append(f"## 当前步骤\n第 {step_count} 步\n")
 
-    # App 专属示例（当步骤较少时注入，步骤多了则节省 Token）
-    if step_count <= 3:
-        few_shot = build_few_shot_block(app_name, max_examples=2)
+    # 注入 Few-Shot (前 4 步注入)
+    if step_count <= 4:
+        few_shot = build_few_shot_block(app_name, max_examples=3)
         if few_shot:
             parts.append(few_shot + "\n")
 
-    # 重试提示
     if retry_hint:
-        parts.append(f"## ⚠️ 注意\n{retry_hint}\n")
+        parts.append(f"## ⚠️ 上次格式错误，请修正\n{retry_hint}\n")
 
-    # 最终指令
     parts.append(
-        "## 请根据上方截图分析当前界面，并输出下一步操作\n"
-        "严格按照格式：\n"
+        "## 输出要求\n"
+        "请严格按照以下格式输出（「动作：」必须单独一行，完全匹配格式）：\n"
         "```\n"
-        "思考：[分析界面元素，判断下一步]\n"
-        "动作：[ACTION:[[params]]]\n"
+        "思考：[分析界面，确定目标元素位置]\n"
+        "动作：ACTION:[[params]]\n"
         "```"
     )
 
     return "\n".join(parts)
 
+
+# ============================================================
+#   Messages 构建
+# ============================================================
 
 def build_messages(
     system_prompt: str,
@@ -361,29 +420,9 @@ def build_messages(
     image_b64_url: str,
     history_image_messages: List[Dict],
 ) -> List[Dict]:
-    """
-    构建完整的 OpenAI messages 列表
-
-    消息顺序：
-    1. system（固定）
-    2. 历史图文交互（可选）
-    3. user（当前截图 + 指令）
-
-    Args:
-        system_prompt: 系统提示词
-        user_text: 当前步骤的用户提示文字
-        image_b64_url: 当前截图的 base64 URL
-        history_image_messages: 来自 ContextManager 的历史消息列表
-
-    Returns:
-        messages list
-    """
+    """构建完整 OpenAI messages 列表"""
     messages = [{"role": "system", "content": system_prompt}]
-
-    # 注入压缩后的历史消息（仅最近几轮的图文对话）
     messages.extend(history_image_messages)
-
-    # 当前步骤：文字 + 截图
     messages.append({
         "role": "user",
         "content": [
@@ -391,5 +430,21 @@ def build_messages(
             {"type": "image_url", "image_url": {"url": image_b64_url}},
         ],
     })
-
     return messages
+
+
+# ============================================================
+#   App 类型检测（向后兼容）
+# ============================================================
+
+def _detect_app(instruction: str, history_actions: List[Dict]) -> str:
+    """从指令/历史动作推断 App 类型（兼容旧代码）"""
+    # 先从历史 OPEN 推断
+    for act in history_actions:
+        if act.get("action") == "OPEN":
+            app = act.get("parameters", {}).get("app_name", "")
+            if app:
+                return app
+
+    result = detect_app_from_instruction(instruction)
+    return result or "通用"
