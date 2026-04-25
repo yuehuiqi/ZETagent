@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 本地调试启动脚本（debug_runner.py）
 
@@ -16,12 +17,12 @@ import warnings
 # ============================================================
 #   1. 设置 API Key（调试用）
 #   ⚠️ 若 Key 失效请到火山引擎控制台重新获取：
-#      https://console.volcengine.com/ark → API Key 管理
+#      https://console.volcengine.com/ark 的 API Key 管理
 # ============================================================
 os.environ["VLM_API_KEY"] = "ark-22e3203f-6be0-498b-85f2-99f48bfb36ee-50063"
 
 # ============================================================
-#   2. 屏蔽 agent_base.py 产生的"调试模式"警告噪声
+#   2. 屏蔽 agent_base.py 产生的“调试模式”警告噪声
 # ============================================================
 warnings.filterwarnings("ignore", category=UserWarning, message=".*调试模式.*")
 warnings.filterwarnings("ignore", category=UserWarning, message=".*EVAL_MODE.*")
